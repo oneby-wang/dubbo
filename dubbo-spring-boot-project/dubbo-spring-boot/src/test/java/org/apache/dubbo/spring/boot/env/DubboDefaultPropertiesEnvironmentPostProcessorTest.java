@@ -18,6 +18,7 @@ package org.apache.dubbo.spring.boot.env;
 
 import java.util.HashMap;
 
+import com.google.common.collect.ImmutableMap;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.SpringApplication;
 import org.springframework.core.Ordered;
@@ -26,6 +27,7 @@ import org.springframework.core.env.MutablePropertySources;
 import org.springframework.core.env.PropertySource;
 import org.springframework.mock.env.MockEnvironment;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
@@ -105,5 +107,17 @@ class DubboDefaultPropertiesEnvironmentPostProcessorTest {
         defaultPropertySource = propertySources.get("defaultProperties");
         assertNotNull(defaultPropertySource);
         assertEquals("virtual", defaultPropertySource.getProperty("dubbo.protocol.threadpool"));
+    }
+
+    @Test
+    void testPostProcessEnvironmentWithImmutableDefaultProperties() {
+        MockEnvironment environment = new MockEnvironment();
+        MutablePropertySources propertySources = environment.getPropertySources();
+        propertySources.addLast(new MapPropertySource("defaultProperties", ImmutableMap.of()));
+
+        assertDoesNotThrow(() -> instance.postProcessEnvironment(environment, springApplication));
+        PropertySource<?> defaultPropertySource = propertySources.get("defaultProperties");
+        assertNotNull(defaultPropertySource);
+        assertEquals("true", defaultPropertySource.getProperty("dubbo.config.multiple"));
     }
 }

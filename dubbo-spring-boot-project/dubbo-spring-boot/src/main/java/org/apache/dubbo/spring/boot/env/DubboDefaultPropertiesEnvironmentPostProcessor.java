@@ -17,6 +17,7 @@
 package org.apache.dubbo.spring.boot.env;
 
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Properties;
 
@@ -123,24 +124,22 @@ public class DubboDefaultPropertiesEnvironmentPostProcessor implements Environme
      * @param map             Default Dubbo Properties
      */
     private void addOrReplace(MutablePropertySources propertySources, Map<String, Object> map) {
-        MapPropertySource target = null;
         if (propertySources.contains(PROPERTY_SOURCE_NAME)) {
             PropertySource<?> source = propertySources.get(PROPERTY_SOURCE_NAME);
             if (source instanceof MapPropertySource) {
-                target = (MapPropertySource) source;
+                MapPropertySource target = (MapPropertySource) source;
+                Map<String, Object> mergedProperties = new LinkedHashMap<>(target.getSource());
                 for (Map.Entry<String, Object> entry : map.entrySet()) {
                     String key = entry.getKey();
-                    if (!target.containsProperty(key)) {
-                        target.getSource().put(key, entry.getValue());
+                    if (!mergedProperties.containsKey(key)) {
+                        mergedProperties.put(key, entry.getValue());
                     }
                 }
+                propertySources.replace(
+                        PROPERTY_SOURCE_NAME, new MapPropertySource(PROPERTY_SOURCE_NAME, mergedProperties));
             }
+            return;
         }
-        if (target == null) {
-            target = new MapPropertySource(PROPERTY_SOURCE_NAME, map);
-        }
-        if (!propertySources.contains(PROPERTY_SOURCE_NAME)) {
-            propertySources.addLast(target);
-        }
+        propertySources.addLast(new MapPropertySource(PROPERTY_SOURCE_NAME, map));
     }
 }
